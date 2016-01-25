@@ -14,10 +14,13 @@ Setup
 -----
 
 1.	Add `duration` as user defined attribute to your `~/.taskrc`
+
 	```
 	uda.duration.type = numeric
 	```
+
 2.	Install `Gantt::Project` perl module
+
 	```
 	cpanm Gantt::Project
 	```
