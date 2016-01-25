@@ -38,8 +38,6 @@ my $gc = Project::Gantt->new(
 	mode        => 'days',
 );
 
-my $resource = $gc->addResource(name => '*');
-
 for my $task (@task_hierarchy) {
 	unless (defined $task->{due}) {
 		warn "No due date specified. Skipping task...\n";
@@ -56,6 +54,7 @@ for my $task (@task_hierarchy) {
 	my $start = $due_date - 24*60*60 * $duration;
 	my $end   = $due_date;
 
+	my $resource = $gc->addResource(name => $task->{id});
 	$gc->addTask(
 		description => $task->{description},
 		resource    => $resource,
