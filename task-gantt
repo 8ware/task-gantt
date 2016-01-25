@@ -1,0 +1,89 @@
+#! /usr/bin/env perl
+
+use strict;
+use warnings;
+
+use feature 'say';
+
+
+use Getopt::Long;
+use JSON::PP;
+use Project::Gantt;
+use Project::Gantt::Skin;
+use Time::Piece;
+
+
+my $DEFAULT_DURATION = 1;
+my $DEFAULT_FILENAME = 'gantt.png';
+my $DEFAULT_DESCRIPTION = 'Gantt Chart for Taskwarrior';
+
+
+my $filename = $DEFAULT_FILENAME;
+my $description = $DEFAULT_DESCRIPTION;
+GetOptions(
+	'stdout' => sub { $filename = 'png:-' },
+	'o|output=s' => \$filename,
+	'd|description=s' => \$description,
+);
+
+
+my @filters = @ARGV;
+my @tasks   = get_tasks(@filters);
+
+my @task_hierarchy = resolve_dependencies(@tasks);
+
+my $gc = Project::Gantt->new(
+	file        => $filename,
+	description => $description,
+	mode        => 'days',
+);
+
+my $resource = $gc->addResource(name => '*');
+
+for my $task (@task_hierarchy) {
+	unless (defined $task->{due}) {
+		warn "No due date specified. Skipping task...\n";
+		next;
+	}
+	unless (defined $task->{duration}) {
+		warn "No duration specified. Assuming 1 day...\n";
+	}
+	
+	my $due_date = Time::Piece->strptime($task->{due}, "%Y%m%dT%H%M%SZ");
+	# The default duration also applies to durations set to 0
+	my $duration = $task->{duration} || $DEFAULT_DURATION;
+
+	my $start = $due_date - 24*60*60 * $duration;
+	my $end   = $due_date;
+
+	$gc->addTask(
+		description => $task->{description},
+		resource    => $resource,
+		start       => $start->strftime('%Y-%m-%d 00:00:00'),
+		end         => $end->strftime('%Y-%m-%d 00:00:00')
+	);
+}
+
+# Save/output gantt chart
+$gc->display();
+
+
+sub get_tasks {
+	my @filters = @_;
+
+	my @command = ('task', 'export', @filters);
+	open my $pipe, '-|', @command or die "Could not execute @command: $!\n";
+	my $json = join "\n", <$pipe>;
+	close $pipe or warn "Could not close pipe: $!\n";
+
+	my $tasks = decode_json($json);
+
+	return @{$tasks};
+}
+
+sub resolve_dependencies {
+	my @tasks = @_;
+
+	return @tasks;
+}
+
