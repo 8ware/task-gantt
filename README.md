@@ -19,10 +19,10 @@ Setup
 	uda.duration.type = numeric
 	```
 
-2.	Install `Gantt::Project` perl module
+2.	Install `Project::Gantt` perl module
 
 	```
-	cpanm Gantt::Project
+	cpanm Project::Gantt
 	```
 
 
