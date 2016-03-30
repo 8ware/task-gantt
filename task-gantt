@@ -54,7 +54,9 @@ for my $task (@task_hierarchy) {
 	my $start = $due_date - 24*60*60 * $duration;
 	my $end   = $due_date;
 
-	my $resource = $gc->addResource(name => $task->{id});
+	my $id = $task->{id} || $task->{uuid};
+
+	my $resource = $gc->addResource(name => $id);
 	$gc->addTask(
 		description => $task->{description},
 		resource    => $resource,
